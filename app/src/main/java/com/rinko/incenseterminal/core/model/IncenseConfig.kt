@@ -1,16 +1,11 @@
 package com.rinko.incenseterminal.core.model
 
 data class IncenseConfig(
-    val durationSeconds: Int = 25 * 60
+    val durationSeconds: Int = 25 * 60,
+    val length: Int = 9
 ) {
     val durationMinutes: Int get() = durationSeconds / 60
-    val totalSticks: Int get() = durationMinutes.toSticks()
-}
-
-fun Int.toSticks(): Int = when {
-    this <= 25 -> 3
-    this <= 50 -> 6
-    else -> (this / 10).coerceAtLeast(9)
+    val totalSticks: Int get() = length
 }
 
 fun Int.formatDuration(): String {

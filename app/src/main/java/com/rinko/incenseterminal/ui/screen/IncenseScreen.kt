@@ -1,6 +1,10 @@
 package com.rinko.incenseterminal.ui.screen
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,89 +15,155 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rinko.incenseterminal.core.engine.IncenseViewModel
 import com.rinko.incenseterminal.core.model.BurnPhase
 import com.rinko.incenseterminal.core.model.IncenseState
+import com.rinko.incenseterminal.core.model.formatSeconds
 import com.rinko.incenseterminal.ui.theme.IncenseColors
 
 @Composable
-fun IncenseScreen(
+fun IncenseContent(
     viewModel: IncenseViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val renderedIncense by viewModel.renderedIncense.collectAsState()
+    var showConfig by remember { mutableStateOf(false) }
+    var showDebug by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(IncenseColors.Background)
-            .statusBarsPadding()
     ) {
-        StatusSection(
-            state = state,
-            modifier = Modifier.align(Alignment.TopEnd)
+        Column(modifier = Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                TerminalHeader(state, modifier = Modifier.weight(1f))
+                ConfigButton(onClick = { showConfig = true })
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                IncenseDisplay(renderedIncense)
+                Spacer(modifier = Modifier.height(12.dp))
+                TimerSection(state)
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp, top = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                ControlsSection(state, viewModel)
+            }
+        }
+
+        Text(
+            text = "[ dbg ]",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 10.sp,
+            color = IncenseColors.DimText,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 8.dp, bottom = 8.dp)
+                .clickable { showDebug = !showDebug }
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            IncenseDisplay(renderedIncense)
-            Spacer(modifier = Modifier.height(12.dp))
-            TimerSection(state)
+        if (showDebug) {
+            DebugOverlay(
+                state = state,
+                viewModel = viewModel,
+                onDismiss = { showDebug = false }
+            )
         }
+    }
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 48.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            ControlsSection(state, viewModel)
-            Spacer(modifier = Modifier.height(20.dp))
-            DebugSection(viewModel)
-        }
+    if (showConfig) {
+        ConfigDialog(
+            currentSeconds = viewModel.defaultDurationSeconds,
+            currentLength = viewModel.defaultLength,
+            onDismiss = { showConfig = false },
+            onSelectTime = { seconds -> viewModel.setDefaultDuration(seconds) },
+            onSelectLength = { length -> viewModel.setDefaultLength(length) }
+        )
     }
 }
 
 @Composable
-private fun StatusSection(state: IncenseState, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalAlignment = Alignment.End
-    ) {
+private fun TerminalHeader(state: IncenseState, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
         Text(
-            text = "SESSION #${state.sessionNumber}",
+            text = "$ incense start",
             fontFamily = FontFamily.Monospace,
-            fontSize = 14.sp,
+            fontSize = 12.sp,
+            color = IncenseColors.Success
+        )
+        Text(
+            text = "session : #${state.sessionNumber.toString().padStart(3, '0')}",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
             color = IncenseColors.PrimaryText
         )
-        Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text = "today: ${state.todayFocusMinutes}m  streak: ${state.streakDays}",
+            text = "today   : ${state.todayFocusMinutes}m",
             fontFamily = FontFamily.Monospace,
-            fontSize = 10.sp,
+            fontSize = 11.sp,
+            color = IncenseColors.DimText
+        )
+        Text(
+            text = "streak  : ${state.streakDays}",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
             color = IncenseColors.DimText
         )
     }
+}
+
+@Composable
+private fun ConfigButton(onClick: () -> Unit) {
+    Text(
+        text = "< Config >",
+        fontFamily = FontFamily.Monospace,
+        fontSize = 12.sp,
+        color = IncenseColors.Accent,
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(4.dp)
+    )
 }
 
 @Composable
@@ -112,26 +182,14 @@ private fun IncenseDisplay(renderedIncense: AnnotatedString) {
 private fun TimerSection(state: IncenseState) {
     val remainingText = when (state.burnPhase) {
         is BurnPhase.Idle -> "ready"
-        is BurnPhase.Burning -> {
-            val sec = state.remainingSeconds
-            val min = sec / 60
-            val s = sec % 60
-            String.format("%d:%02d", min, s)
-        }
-        is BurnPhase.Paused -> {
-            val sec = state.remainingSeconds
-            val min = sec / 60
-            val s = sec % 60
-            String.format("%d:%02d", min, s)
-        }
+        is BurnPhase.Burning, is BurnPhase.Paused -> formatSeconds(state.remainingSeconds)
         is BurnPhase.Completed -> "complete"
     }
 
     val statusLabel = when (state.burnPhase) {
-        is BurnPhase.Idle -> ""
+        is BurnPhase.Idle, is BurnPhase.Completed -> ""
         is BurnPhase.Burning -> "remaining"
         is BurnPhase.Paused -> "paused"
-        is BurnPhase.Completed -> ""
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -157,82 +215,385 @@ private fun ControlsSection(
     state: IncenseState,
     viewModel: IncenseViewModel
 ) {
-    Row(
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth()
+    when (state.burnPhase) {
+        is BurnPhase.Idle -> {
+            AnsiButton("Start") { viewModel.light() }
+        }
+        is BurnPhase.Burning -> {
+            Row(horizontalArrangement = Arrangement.Center) {
+                AnsiButton("Pause") { viewModel.pause() }
+                Spacer(modifier = Modifier.width(24.dp))
+                AnsiButton("Reset") { viewModel.reset() }
+            }
+        }
+        is BurnPhase.Paused -> {
+            Row(horizontalArrangement = Arrangement.Center) {
+                AnsiButton("Resume") { viewModel.resume() }
+                Spacer(modifier = Modifier.width(24.dp))
+                AnsiButton("Reset") { viewModel.reset() }
+            }
+        }
+        is BurnPhase.Completed -> {
+            AnsiButton("Done") { viewModel.reset() }
+        }
+    }
+}
+
+@Composable
+private fun AnsiButton(label: String, onClick: () -> Unit) {
+    Text(
+        text = "░░░ $label ░░░",
+        fontFamily = FontFamily.Monospace,
+        fontSize = 14.sp,
+        color = IncenseColors.Accent,
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(vertical = 6.dp, horizontal = 4.dp)
+    )
+}
+
+@Composable
+private fun DebugOverlay(
+    state: IncenseState,
+    viewModel: IncenseViewModel,
+    onDismiss: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.7f))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onDismiss
+            ),
+        contentAlignment = Alignment.Center
     ) {
-        when (state.burnPhase) {
-            is BurnPhase.Idle -> {
-                TerminalButton("start") { viewModel.light(25 * 60) }
-                Spacer(modifier = Modifier.width(12.dp))
-                TerminalButton("50m") { viewModel.light(50 * 60) }
-                Spacer(modifier = Modifier.width(12.dp))
-                TerminalButton("90m") { viewModel.light(90 * 60) }
-            }
-            is BurnPhase.Burning -> {
-                TerminalButton("pause") { viewModel.pause() }
-                Spacer(modifier = Modifier.width(12.dp))
-                TerminalButton("reset") { viewModel.reset() }
-            }
-            is BurnPhase.Paused -> {
-                TerminalButton("resume") { viewModel.resume() }
-                Spacer(modifier = Modifier.width(12.dp))
-                TerminalButton("reset") { viewModel.reset() }
-            }
-            is BurnPhase.Completed -> {
-                TerminalButton("done") { viewModel.reset() }
+        Surface(
+            shape = RoundedCornerShape(0.dp),
+            color = IncenseColors.Background,
+            border = BorderStroke(1.dp, IncenseColors.DimText)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "[ debug menu ]",
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp,
+                    color = IncenseColors.DimText
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                DebugMenuItem("10s test") { viewModel.light(10); onDismiss() }
+
+                val isBurning = state.burnPhase is BurnPhase.Burning
+                if (isBurning) {
+                    DebugMenuItem("skip 90%") { viewModel.forceProgress(0.9f); onDismiss() }
+                    DebugMenuItem("force done") { viewModel.forceProgress(1.0f); onDismiss() }
+                } else {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "  (start burning first)",
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                        color = IncenseColors.Warning
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                DebugMenuItem(">>> close <<<") { onDismiss() }
             }
         }
     }
 }
 
 @Composable
-private fun DebugSection(viewModel: IncenseViewModel) {
+private fun DebugMenuItem(label: String, onClick: () -> Unit) {
+    Text(
+        text = "  $label",
+        fontFamily = FontFamily.Monospace,
+        fontSize = 12.sp,
+        color = IncenseColors.PrimaryText,
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp)
+            .fillMaxWidth()
+    )
+}
+
+private enum class ConfigPage { MAIN, TIME, LENGTH }
+
+@Composable
+private fun ConfigDialog(
+    currentSeconds: Int,
+    currentLength: Int,
+    onDismiss: () -> Unit,
+    onSelectTime: (Int) -> Unit,
+    onSelectLength: (Int) -> Unit
+) {
+    var page by remember { mutableStateOf(ConfigPage.MAIN) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(0.dp),
+            color = IncenseColors.Background,
+            border = BorderStroke(1.dp, IncenseColors.Accent)
+        ) {
+            when (page) {
+                ConfigPage.MAIN -> ConfigMainPage(
+                    onDismiss = onDismiss,
+                    onTime = { page = ConfigPage.TIME },
+                    onLength = { page = ConfigPage.LENGTH }
+                )
+                ConfigPage.TIME -> ConfigTimePage(
+                    currentSeconds = currentSeconds,
+                    onBack = { page = ConfigPage.MAIN },
+                    onSelect = onSelectTime
+                )
+                ConfigPage.LENGTH -> ConfigLengthPage(
+                    currentLength = currentLength,
+                    onBack = { page = ConfigPage.MAIN },
+                    onSelect = onSelectLength
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConfigMainPage(
+    onDismiss: () -> Unit,
+    onTime: () -> Unit,
+    onLength: () -> Unit
+) {
     Column(
+        modifier = Modifier.padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "[ debug ]",
+            text = "=== config ===",
             fontFamily = FontFamily.Monospace,
-            fontSize = 10.sp,
-            color = IncenseColors.DimText
+            fontSize = 14.sp,
+            color = IncenseColors.Accent
         )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ConfigMenuItem("Time") { onTime() }
+        ConfigMenuItem("Length") { onLength() }
+
         Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            horizontalArrangement = Arrangement.Center
-        ) {
-            TerminalButton("10s test") { viewModel.light(10) }
-            Spacer(modifier = Modifier.width(8.dp))
-            TerminalButton("skip 90%") {
-                if (viewModel.state.value.burnPhase is BurnPhase.Burning) {
-                    viewModel.forceProgress(0.9f)
-                }
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            TerminalButton("force done") {
-                if (viewModel.state.value.burnPhase is BurnPhase.Burning) {
-                    viewModel.forceProgress(1.0f)
-                }
-            }
-        }
+        Text(
+            text = "[ cancel ]",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+            color = IncenseColors.DimText,
+            modifier = Modifier
+                .clickable(onClick = onDismiss)
+                .padding(vertical = 4.dp)
+        )
     }
 }
 
 @Composable
-private fun TerminalButton(
-    label: String,
-    onClick: () -> Unit
+private fun ConfigTimePage(
+    currentSeconds: Int,
+    onBack: () -> Unit,
+    onSelect: (Int) -> Unit
 ) {
-    OutlinedButton(
-        onClick = onClick,
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = IncenseColors.Accent
-        )
+    var selected by remember { mutableStateOf(currentSeconds) }
+    var isCustom by remember { mutableStateOf(false) }
+    var customInput by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier.padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = label,
+            text = "=== default time ===",
             fontFamily = FontFamily.Monospace,
-            fontSize = 12.sp
+            fontSize = 14.sp,
+            color = IncenseColors.Accent
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        val options = listOf(15 * 60 to "15m", 30 * 60 to "30m", 45 * 60 to "45m", 60 * 60 to "60m")
+        options.forEach { (sec, label) ->
+            if (!isCustom) {
+                val isSelected = sec == selected
+                Text(
+                    text = if (isSelected) " > $label < " else "   $label   ",
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 13.sp,
+                    color = if (isSelected) IncenseColors.Ember else IncenseColors.PrimaryText,
+                    modifier = Modifier
+                        .clickable {
+                            selected = sec
+                            onSelect(sec)
+                        }
+                        .padding(vertical = 6.dp)
+                        .fillMaxWidth()
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        if (!isCustom) {
+            Text(
+                text = "[ Custom ]",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                color = IncenseColors.PrimaryText,
+                modifier = Modifier
+                    .clickable { isCustom = true }
+                    .padding(vertical = 6.dp)
+                    .fillMaxWidth()
+            )
+        } else {
+            CustomInputRow(
+                value = customInput,
+                onValueChange = { customInput = it }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "[ save ]",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                color = IncenseColors.Success,
+                modifier = Modifier
+                    .clickable {
+                        val mins = customInput.toIntOrNull()
+                        if (mins != null && mins > 0) {
+                            onSelect(mins * 60)
+                            onBack()
+                        }
+                    }
+                    .padding(vertical = 4.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = if (isCustom) "[ cancel ]" else "[ back ]",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+            color = IncenseColors.DimText,
+            modifier = Modifier
+                .clickable {
+                    if (isCustom) {
+                        isCustom = false
+                        customInput = ""
+                    } else {
+                        onBack()
+                    }
+                }
+                .padding(vertical = 4.dp)
         )
     }
+}
+
+@Composable
+private fun CustomInputRow(value: String, onValueChange: (String) -> Unit) {
+    val textColor = IncenseColors.Ember
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 6.dp)
+    ) {
+        Text(
+            text = ">[",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 13.sp,
+            color = textColor
+        )
+        BasicTextField(
+            value = value,
+            onValueChange = { newValue ->
+                if (newValue.all { c -> c.isDigit() } && newValue.length <= 4) {
+                    onValueChange(newValue)
+                }
+            },
+            modifier = Modifier.width(60.dp),
+            textStyle = TextStyle(
+                color = textColor,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                textAlign = TextAlign.Center
+            ),
+            singleLine = true,
+            cursorBrush = SolidColor(textColor)
+        )
+        Text(
+            text = if (value.isNotEmpty()) " minutes]<" else "     minutes]<",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 13.sp,
+            color = textColor
+        )
+    }
+}
+
+@Composable
+private fun ConfigLengthPage(
+    currentLength: Int,
+    onBack: () -> Unit,
+    onSelect: (Int) -> Unit
+) {
+    var selected by remember { mutableStateOf(currentLength) }
+
+    Column(
+        modifier = Modifier.padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "=== length ===",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 14.sp,
+            color = IncenseColors.Accent
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        val options = listOf(3, 5, 7, 9, 12, 15)
+        options.forEach { len ->
+            val isSelected = len == selected
+            Text(
+                text = if (isSelected) " > $len < " else "   $len   ",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                color = if (isSelected) IncenseColors.Ember else IncenseColors.PrimaryText,
+                modifier = Modifier
+                    .clickable {
+                        selected = len
+                        onSelect(len)
+                    }
+                    .padding(vertical = 6.dp)
+                    .fillMaxWidth()
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "[ back ]",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+            color = IncenseColors.DimText,
+            modifier = Modifier
+                .clickable(onClick = onBack)
+                .padding(vertical = 4.dp)
+        )
+    }
+}
+
+@Composable
+private fun ConfigMenuItem(label: String, onClick: () -> Unit) {
+    Text(
+        text = "  $label",
+        fontFamily = FontFamily.Monospace,
+        fontSize = 13.sp,
+        color = IncenseColors.PrimaryText,
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(vertical = 6.dp)
+            .fillMaxWidth()
+    )
 }

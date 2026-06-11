@@ -26,6 +26,12 @@ object IncenseRenderer {
     }
 
     private fun AnnotatedString.Builder.renderIdle(state: IncenseState) {
+        repeat(3) {
+            withStyle(SpanStyle(color = IncenseColors.Background)) {
+                append(centerLine(' '))
+                append("\n")
+            }
+        }
         withStyle(SpanStyle(color = IncenseColors.DimText)) {
             append(centerLine(IDLE_TIP))
             append("\n")
@@ -40,6 +46,15 @@ object IncenseRenderer {
         state: IncenseState,
         phase: BurnPhase.Burning
     ) {
+        val burntSticks = state.totalSticks - state.remainingSticks
+
+        repeat(burntSticks) {
+            withStyle(SpanStyle(color = IncenseColors.Background)) {
+                append(centerLine(' '))
+                append("\n")
+            }
+        }
+
         val smokeFrame = SmokeFrames.get(phase.smokePhase)
         withStyle(SpanStyle(color = IncenseColors.Smoke)) {
             smokeFrame.lines.forEach { line ->
@@ -68,6 +83,15 @@ object IncenseRenderer {
         state: IncenseState,
         phase: BurnPhase.Paused
     ) {
+        val burntSticks = state.totalSticks - state.remainingSticks
+
+        repeat(burntSticks) {
+            withStyle(SpanStyle(color = IncenseColors.Background)) {
+                append(centerLine(' '))
+                append("\n")
+            }
+        }
+
         withStyle(SpanStyle(color = IncenseColors.DimText)) {
             repeat(3) {
                 append(centerLine(' '))

@@ -2,13 +2,14 @@ package com.rinko.incenseterminal.core.model
 
 data class IncenseState(
     val burnPhase: BurnPhase = BurnPhase.Idle,
-    val totalSticks: Int = 3,
+    val totalSticks: Int = 9,
     val durationSeconds: Int = 25 * 60,
     val sessionNumber: Int = 1,
     val todayFocusMinutes: Int = 0,
     val weekFocusMinutes: Int = 0,
     val streakDays: Int = 0,
-    val ceremonyFrame: Int = 0
+    val ceremonyFrame: Int = 0,
+    val workloadName: String = ""
 ) {
     val progress: Float
         get() = when (burnPhase) {
