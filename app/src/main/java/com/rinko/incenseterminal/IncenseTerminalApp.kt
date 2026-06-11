@@ -45,8 +45,19 @@ class IncenseTerminalApp : Application() {
         return prefs.getInt(PREF_LAST_LENGTH, 9)
     }
 
+    fun getCachedMaxSticks(): Int = prefs.getInt(PREF_MAX_STICKS, 0)
+
+    fun saveMaxSticks(max: Int) {
+        prefs.edit().putInt(PREF_MAX_STICKS, max).apply()
+    }
+
+    fun clearMaxSticks() {
+        prefs.edit().remove(PREF_MAX_STICKS).apply()
+    }
+
     companion object {
         private const val PREF_LAST_WL_ID = "last_workload_id"
         private const val PREF_LAST_LENGTH = "last_length"
+        private const val PREF_MAX_STICKS = "max_sticks"
     }
 }

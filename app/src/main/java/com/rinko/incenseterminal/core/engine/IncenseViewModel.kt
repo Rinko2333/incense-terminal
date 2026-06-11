@@ -74,6 +74,39 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    val effectiveMaxSticks: Int
+        get() {
+            val cached = app.getCachedMaxSticks()
+            return if (cached > 0) cached else 24
+        }
+
+    val lengthOptions: List<Int>
+        get() {
+            val max = effectiveMaxSticks
+            val min = max / 2
+            return (0 until 6).map { i -> min + (max - min) * i / 5 }
+        }
+
+    var remeasureCount: Int = 0
+        private set
+
+    fun onMeasured(max: Int) {
+        app.saveMaxSticks(max)
+        remeasureCount = -1
+        val minLen = max / 2
+        val newLen = if (defaultLength > max || defaultLength < minLen) minLen else defaultLength
+        if (newLen != defaultLength) {
+            defaultLength = newLen
+            app.saveLength(newLen)
+        }
+        _state.update { if (it.isIdle) it.copy(totalSticks = newLen) else it }
+    }
+
+    fun requestRemeasure() {
+        app.clearMaxSticks()
+        remeasureCount = 0
+    }
+
     init {
         renderJob = viewModelScope.launch {
             _state.collect { state ->
@@ -100,7 +133,17 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
                 }
             }
         }
+        val cachedMax = app.getCachedMaxSticks()
+        if (cachedMax > 0) {
+            remeasureCount = -1
+        }
         defaultLength = app.restoreLength()
+        val effectiveMax = if (cachedMax > 0) cachedMax else 24
+        val minLen = effectiveMax / 2
+        if (defaultLength > effectiveMax || defaultLength < minLen) {
+            defaultLength = minLen
+            app.saveLength(minLen)
+        }
         _state.update { it.copy(totalSticks = defaultLength) }
         refreshAggregateState()
     }

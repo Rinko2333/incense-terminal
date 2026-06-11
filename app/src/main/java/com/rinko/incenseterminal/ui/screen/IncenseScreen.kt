@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,12 +15,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -50,7 +54,8 @@ fun IncenseContent(
     val state by viewModel.state.collectAsState()
     val renderedIncense by viewModel.renderedIncense.collectAsState()
     var showConfig by remember { mutableStateOf(false) }
-    var showDebug by remember { mutableStateOf(false) }
+    var dbgClickCount by remember { mutableStateOf(0) }
+    var dbgEnabled by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -70,16 +75,35 @@ fun IncenseContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Column(
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Bottom
+                    .weight(1f)
             ) {
-                IncenseDisplay(renderedIncense)
-                Spacer(modifier = Modifier.height(12.dp))
-                TimerSection(state)
+                val density = LocalDensity.current
+                val heightDp = maxHeight
+
+                LaunchedEffect(viewModel.remeasureCount) {
+                    if (viewModel.remeasureCount >= 0) {
+                        val lineHeightDp = with(density) { 20.sp.toDp() }
+                        val maxSticks = if (lineHeightDp > 0.dp)
+                            (heightDp / lineHeightDp).toInt() - 4
+                        else 0
+                        if (maxSticks > 0) {
+                            viewModel.onMeasured(maxSticks)
+                        }
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    IncenseDisplay(renderedIncense)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    TimerSection(state)
+                }
             }
 
             Column(
@@ -92,22 +116,28 @@ fun IncenseContent(
             }
         }
 
-        Text(
-            text = "[ dbg ]",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 10.sp,
-            color = IncenseColors.DimText,
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 8.dp, bottom = 8.dp)
-                .clickable { showDebug = !showDebug }
+                .align(Alignment.TopEnd)
+                .padding(top = 4.dp, end = 4.dp)
+                .size(48.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    dbgClickCount++
+                    if (dbgClickCount >= 10) {
+                        dbgEnabled = !dbgEnabled
+                        dbgClickCount = 0
+                    }
+                }
         )
 
-        if (showDebug) {
+        if (dbgEnabled) {
             DebugOverlay(
                 state = state,
                 viewModel = viewModel,
-                onDismiss = { showDebug = false }
+                onDismiss = { dbgEnabled = false }
             )
         }
     }
@@ -116,6 +146,7 @@ fun IncenseContent(
         ConfigDialog(
             currentSeconds = viewModel.defaultDurationSeconds,
             currentLength = viewModel.defaultLength,
+            lengthOptions = viewModel.lengthOptions,
             workloadDefaultSeconds = viewModel.workloadDefaultSeconds,
             isUsingOverride = viewModel.isUsingOverride,
             onDismiss = { showConfig = false },
@@ -304,6 +335,8 @@ private fun DebugOverlay(
                         color = IncenseColors.Warning
                     )
                 }
+                Spacer(modifier = Modifier.height(4.dp))
+                DebugMenuItem("remeasure") { viewModel.requestRemeasure(); onDismiss() }
 
                 Spacer(modifier = Modifier.height(8.dp))
                 DebugMenuItem(">>> close <<<") { onDismiss() }
@@ -332,6 +365,7 @@ private enum class ConfigPage { MAIN, TIME, LENGTH }
 private fun ConfigDialog(
     currentSeconds: Int,
     currentLength: Int,
+    lengthOptions: List<Int>,
     workloadDefaultSeconds: Int?,
     isUsingOverride: Boolean,
     onDismiss: () -> Unit,
@@ -363,6 +397,7 @@ private fun ConfigDialog(
                 )
                 ConfigPage.LENGTH -> ConfigLengthPage(
                     currentLength = currentLength,
+                    options = lengthOptions,
                     onBack = { page = ConfigPage.MAIN },
                     onSelect = onSelectLength
                 )
@@ -569,6 +604,7 @@ private fun CustomInputRow(value: String, onValueChange: (String) -> Unit) {
 @Composable
 private fun ConfigLengthPage(
     currentLength: Int,
+    options: List<Int>,
     onBack: () -> Unit,
     onSelect: (Int) -> Unit
 ) {
@@ -586,7 +622,6 @@ private fun ConfigLengthPage(
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        val options = listOf(3, 5, 7, 9, 12, 15)
         options.forEach { len ->
             val isSelected = len == selected
             Text(
