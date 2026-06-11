@@ -135,4 +135,19 @@ class FocusSessionRepository(private val db: AppDatabase) {
         }
         return streak
     }
+
+    fun getTodayCountsPerWorkload(todayStartMs: Long): Map<String, Int> {
+        val cursor = db.readableDatabase.rawQuery(
+            "SELECT workload_name, COUNT(*) FROM ${AppDatabase.TABLE_FOCUS_SESSION} " +
+            "WHERE completed = 1 AND start_timestamp >= ? " +
+            "GROUP BY workload_name",
+            arrayOf(todayStartMs.toString())
+        )
+        val map = mutableMapOf<String, Int>()
+        while (cursor.moveToNext()) {
+            map[cursor.getString(0)] = cursor.getInt(1)
+        }
+        cursor.close()
+        return map
+    }
 }

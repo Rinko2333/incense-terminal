@@ -8,15 +8,7 @@ object CeremonyFrames {
         CeremonyFrame(listOf("  *  ")),
         CeremonyFrame(listOf(" * * * ")),
         CeremonyFrame(listOf("* ✦ * ")),
-        CeremonyFrame(listOf("focus complete"))
-    )
-
-    val summaryLines = listOf(
-        "",
-        "session complete",
-        "",
-        "+25m focus",
-        "streak +1"
+        CeremonyFrame(listOf("Cocus Complete"))
     )
 
     fun get(index: Int): CeremonyFrame? {

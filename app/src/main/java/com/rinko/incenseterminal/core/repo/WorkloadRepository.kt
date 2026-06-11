@@ -38,8 +38,9 @@ class WorkloadRepository(private val db: AppDatabase) {
         db.writableDatabase.delete(AppDatabase.TABLE_WORKLOAD, "id = ?", arrayOf(id.toString()))
     }
 
-    fun updateDuration(id: Long, defaultDurationMinutes: Int) {
+    fun update(id: Long, name: String, defaultDurationMinutes: Int) {
         val cv = ContentValues().apply {
+            put("name", name)
             put("default_duration_minutes", defaultDurationMinutes)
         }
         db.writableDatabase.update(

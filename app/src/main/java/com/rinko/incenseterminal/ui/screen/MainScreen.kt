@@ -58,11 +58,11 @@ private fun NavBar(current: Screen, onSelect: (Screen) -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
-        NavItem("~", current == Screen.HOME) { onSelect(Screen.HOME) }
+        NavItem("~ /", current == Screen.HOME) { onSelect(Screen.HOME) }
         Spacer(modifier = Modifier.width(16.dp))
-        NavItem("# workloads", current == Screen.WORKLOAD) { onSelect(Screen.WORKLOAD) }
+        NavItem("# workloads /", current == Screen.WORKLOAD) { onSelect(Screen.WORKLOAD) }
         Spacer(modifier = Modifier.width(16.dp))
-        NavItem("... history", current == Screen.HISTORY) { onSelect(Screen.HISTORY) }
+        NavItem("# history /", current == Screen.HISTORY) { onSelect(Screen.HISTORY) }
     }
 }
 
@@ -71,7 +71,7 @@ private fun NavItem(label: String, active: Boolean, onClick: () -> Unit) {
     Text(
         text = if (active) "[ $label ]" else "  $label",
         fontFamily = FontFamily.Monospace,
-        fontSize = 12.sp,
+        fontSize = 14.sp,
         color = if (active) IncenseColors.Accent else IncenseColors.DimText,
         modifier = Modifier.clickable(onClick = onClick).padding(vertical = 4.dp)
     )

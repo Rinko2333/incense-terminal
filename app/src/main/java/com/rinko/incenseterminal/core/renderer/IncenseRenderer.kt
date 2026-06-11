@@ -120,11 +120,19 @@ object IncenseRenderer {
                 }
             }
         } else {
+            val mins = state.durationMinutes
+            val streak = state.streakDays
+            withStyle(SpanStyle(color = IncenseColors.Success)) {
+                append(centerLinePlain("Complete"))
+                append("\n")
+            }
             withStyle(SpanStyle(color = IncenseColors.PrimaryText)) {
-                CeremonyFrames.summaryLines.forEach { line ->
-                    append(centerLinePlain(line))
-                    append("\n")
-                }
+                append(centerLinePlain("+${mins}m Focus"))
+                append("\n")
+            }
+            withStyle(SpanStyle(color = IncenseColors.Ember)) {
+                append(centerLinePlain("Streak $streak"))
+                append("\n")
             }
         }
     }

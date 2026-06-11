@@ -116,8 +116,11 @@ fun IncenseContent(
         ConfigDialog(
             currentSeconds = viewModel.defaultDurationSeconds,
             currentLength = viewModel.defaultLength,
+            workloadDefaultSeconds = viewModel.workloadDefaultSeconds,
+            isUsingOverride = viewModel.isUsingOverride,
             onDismiss = { showConfig = false },
             onSelectTime = { seconds -> viewModel.setDefaultDuration(seconds) },
+            onUseDefault = { viewModel.useWorkloadDefault() },
             onSelectLength = { length -> viewModel.setDefaultLength(length) }
         )
     }
@@ -127,27 +130,27 @@ fun IncenseContent(
 private fun TerminalHeader(state: IncenseState, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Text(
-            text = "$ incense start",
+            text = "$ Incense Start",
             fontFamily = FontFamily.Monospace,
-            fontSize = 12.sp,
+            fontSize = 14.sp,
             color = IncenseColors.Success
         )
         Text(
-            text = "session : #${state.sessionNumber.toString().padStart(3, '0')}",
+            text = "Session : #${state.sessionNumber.toString().padStart(3, '0')}",
             fontFamily = FontFamily.Monospace,
-            fontSize = 12.sp,
+            fontSize = 13.sp,
             color = IncenseColors.PrimaryText
         )
         Text(
-            text = "today   : ${state.todayFocusMinutes}m",
+            text = "Today   : ${state.todayFocusMinutes}m",
             fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
+            fontSize = 12.sp,
             color = IncenseColors.DimText
         )
         Text(
-            text = "streak  : ${state.streakDays}",
+            text = "Streak  : ${state.streakDays}",
             fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
+            fontSize = 12.sp,
             color = IncenseColors.DimText
         )
     }
@@ -158,7 +161,7 @@ private fun ConfigButton(onClick: () -> Unit) {
     Text(
         text = "< Config >",
         fontFamily = FontFamily.Monospace,
-        fontSize = 12.sp,
+        fontSize = 14.sp,
         color = IncenseColors.Accent,
         modifier = Modifier
             .clickable(onClick = onClick)
@@ -181,15 +184,15 @@ private fun IncenseDisplay(renderedIncense: AnnotatedString) {
 @Composable
 private fun TimerSection(state: IncenseState) {
     val remainingText = when (state.burnPhase) {
-        is BurnPhase.Idle -> "ready"
+        is BurnPhase.Idle -> "Ready"
         is BurnPhase.Burning, is BurnPhase.Paused -> formatSeconds(state.remainingSeconds)
-        is BurnPhase.Completed -> "complete"
+        is BurnPhase.Completed -> "Complete"
     }
 
     val statusLabel = when (state.burnPhase) {
-        is BurnPhase.Idle, is BurnPhase.Completed -> ""
-        is BurnPhase.Burning -> "remaining"
-        is BurnPhase.Paused -> "paused"
+        is BurnPhase.Idle, is BurnPhase.Completed -> "OK"
+        is BurnPhase.Burning -> "Remaining"
+        is BurnPhase.Paused -> "Paused"
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -244,7 +247,7 @@ private fun AnsiButton(label: String, onClick: () -> Unit) {
     Text(
         text = "░░░ $label ░░░",
         fontFamily = FontFamily.Monospace,
-        fontSize = 14.sp,
+        fontSize = 16.sp,
         color = IncenseColors.Accent,
         modifier = Modifier
             .clickable(onClick = onClick)
@@ -329,8 +332,11 @@ private enum class ConfigPage { MAIN, TIME, LENGTH }
 private fun ConfigDialog(
     currentSeconds: Int,
     currentLength: Int,
+    workloadDefaultSeconds: Int?,
+    isUsingOverride: Boolean,
     onDismiss: () -> Unit,
     onSelectTime: (Int) -> Unit,
+    onUseDefault: () -> Unit,
     onSelectLength: (Int) -> Unit
 ) {
     var page by remember { mutableStateOf(ConfigPage.MAIN) }
@@ -349,8 +355,11 @@ private fun ConfigDialog(
                 )
                 ConfigPage.TIME -> ConfigTimePage(
                     currentSeconds = currentSeconds,
+                    workloadDefaultSeconds = workloadDefaultSeconds,
+                    isUsingOverride = isUsingOverride,
                     onBack = { page = ConfigPage.MAIN },
-                    onSelect = onSelectTime
+                    onSelect = onSelectTime,
+                    onUseDefault = onUseDefault
                 )
                 ConfigPage.LENGTH -> ConfigLengthPage(
                     currentLength = currentLength,
@@ -373,7 +382,7 @@ private fun ConfigMainPage(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "=== config ===",
+            text = "=== Config ===",
             fontFamily = FontFamily.Monospace,
             fontSize = 14.sp,
             color = IncenseColors.Accent
@@ -399,10 +408,14 @@ private fun ConfigMainPage(
 @Composable
 private fun ConfigTimePage(
     currentSeconds: Int,
+    workloadDefaultSeconds: Int?,
+    isUsingOverride: Boolean,
     onBack: () -> Unit,
-    onSelect: (Int) -> Unit
+    onSelect: (Int) -> Unit,
+    onUseDefault: () -> Unit
 ) {
-    var selected by remember { mutableStateOf(currentSeconds) }
+    val defaultSentinel = -1
+    var selected by remember { mutableStateOf(if (isUsingOverride) currentSeconds else defaultSentinel) }
     var isCustom by remember { mutableStateOf(false) }
     var customInput by remember { mutableStateOf("") }
 
@@ -411,12 +424,32 @@ private fun ConfigTimePage(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "=== default time ===",
+            text = "=== Default Time ===",
             fontFamily = FontFamily.Monospace,
             fontSize = 14.sp,
             color = IncenseColors.Accent
         )
         Spacer(modifier = Modifier.height(16.dp))
+
+        if (workloadDefaultSeconds != null) {
+            val isDefaultSelected = selected == defaultSentinel
+            Text(
+                text = if (isDefaultSelected) " > #DEFAULT (${workloadDefaultSeconds / 60}m) < " else "   #DEFAULT (${workloadDefaultSeconds / 60}m)   ",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                color = if (isDefaultSelected) IncenseColors.Ember else IncenseColors.PrimaryText,
+                modifier = Modifier
+                    .clickable {
+                        selected = defaultSentinel
+                        isCustom = false
+                        customInput = ""
+                        onUseDefault()
+                    }
+                    .padding(vertical = 6.dp)
+                    .fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+        }
 
         val options = listOf(15 * 60 to "15m", 30 * 60 to "30m", 45 * 60 to "45m", 60 * 60 to "60m")
         options.forEach { (sec, label) ->
@@ -546,7 +579,7 @@ private fun ConfigLengthPage(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "=== length ===",
+            text = "=== Length ===",
             fontFamily = FontFamily.Monospace,
             fontSize = 14.sp,
             color = IncenseColors.Accent

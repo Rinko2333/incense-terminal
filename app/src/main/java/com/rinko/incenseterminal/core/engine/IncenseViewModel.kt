@@ -50,13 +50,28 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
 
     private var overrideDurationSeconds: Int? = null
 
+    val isUsingOverride: Boolean get() = overrideDurationSeconds != null
+
+    val workloadDefaultSeconds: Int?
+        get() = app.currentWorkload.value?.defaultDurationMinutes?.times(60)
+
     fun setDefaultDuration(seconds: Int) {
         overrideDurationSeconds = seconds
         defaultDurationSeconds = seconds
     }
 
+    fun useWorkloadDefault() {
+        overrideDurationSeconds = null
+        defaultDurationSeconds = app.currentWorkload.value?.defaultDurationMinutes?.times(60) ?: (25 * 60)
+    }
+
     fun setDefaultLength(length: Int) {
         defaultLength = length
+        app.saveLength(length)
+        _state.update {
+            if (it.isIdle) it.copy(totalSticks = length)
+            else it
+        }
     }
 
     init {
@@ -85,6 +100,8 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
                 }
             }
         }
+        defaultLength = app.restoreLength()
+        _state.update { it.copy(totalSticks = defaultLength) }
         refreshAggregateState()
     }
 
@@ -135,10 +152,14 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
         ceremonyPlayer.stop()
         elapsedMs = 0L
         sessionStartMs = 0L
-        val currentWl = _state.value.workloadName
+        val current = _state.value
         _state.value = IncenseState(
             totalSticks = defaultLength,
-            workloadName = currentWl
+            workloadName = current.workloadName,
+            sessionNumber = current.sessionNumber,
+            todayFocusMinutes = current.todayFocusMinutes,
+            weekFocusMinutes = current.weekFocusMinutes,
+            streakDays = current.streakDays
         )
     }
 

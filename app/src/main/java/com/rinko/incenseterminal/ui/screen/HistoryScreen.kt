@@ -68,7 +68,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = viewModel()) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "$ burn log",
+                    text = "$ Burn Log",
                     fontFamily = FontFamily.Monospace,
                     fontSize = 14.sp,
                     color = IncenseColors.Success
@@ -79,7 +79,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = viewModel()) {
                 Text(
                     text = viewModel.monthLabel(viewMonth),
                     fontFamily = FontFamily.Monospace,
-                    fontSize = 13.sp,
+                    fontSize = 14.sp,
                     color = IncenseColors.PrimaryText
                 )
                 Spacer(modifier = Modifier.width(2.dp))
@@ -213,13 +213,13 @@ private fun HeatmapCellView(
 @Composable
 private fun HeatmapLegend() {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "less", fontFamily = FontFamily.Monospace, fontSize = 9.sp, color = IncenseColors.DimText)
+        Text(text = "Less", fontFamily = FontFamily.Monospace, fontSize = 14.sp, color = IncenseColors.DimText)
         Spacer(modifier = Modifier.width(2.dp))
         listOf("□", "░", "▒", "▓", "█").forEach { ch ->
-            Text(text = ch, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = IncenseColors.PrimaryText)
+            Text(text = ch, fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = IncenseColors.PrimaryText)
             Spacer(modifier = Modifier.width(1.dp))
         }
-        Text(text = "more", fontFamily = FontFamily.Monospace, fontSize = 9.sp, color = IncenseColors.DimText)
+        Text(text = "More", fontFamily = FontFamily.Monospace, fontSize = 14.sp, color = IncenseColors.DimText)
     }
 }
 
