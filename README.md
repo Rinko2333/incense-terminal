@@ -1,9 +1,11 @@
 # Incense Terminal
 
-<p align="right">
-  <a href="./README.md">🇺🇸 English</a> |
-  <a href="./README_CN.md">🇨🇳 简体中文</a>
-</p>
+<div align="right">
+
+[![English](https://img.shields.io/badge/English-blue?style=for-the-badge)](README.md)
+[![简体中文](https://img.shields.io/badge/简体中文-red?style=for-the-badge)](README_CN.md)
+
+</div>
 
 > Burn time, not notifications.
 
