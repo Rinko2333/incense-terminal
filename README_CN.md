@@ -1,5 +1,12 @@
 # Incense Terminal（香终端）
 
+<div align="right">
+
+[![English](https://img.shields.io/badge/English-blue?style=for-the-badge)](README.md)
+[![简体中文](https://img.shields.io/badge/简体中文-red?style=for-the-badge)](README_CN.md)
+
+</div>
+
 > Burn time, not notifications.（燃烧时间，而非发送提醒。）
 
 一款面向程序员和极客的终端风格番茄钟。
