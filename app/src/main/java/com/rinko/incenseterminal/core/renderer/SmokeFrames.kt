@@ -10,7 +10,8 @@ object SmokeFrames {
         listOf(
             "    (  ",
             "   ) ) ",
-            "  ( (  "
+            "  ( (  ",
+            "    )  "
         )
     )
 
@@ -18,7 +19,8 @@ object SmokeFrames {
         listOf(
             "   )   ",
             "  ( (  ",
-            "   ) ) "
+            "   ) ) ",
+            "   (   "
         )
     )
 
@@ -26,7 +28,8 @@ object SmokeFrames {
         listOf(
             "  ( (  ",
             "    )  ",
-            "   (   "
+            "   (   ",
+            "  ( (  "
         )
     )
 

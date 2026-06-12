@@ -7,11 +7,11 @@
 
 </div>
 
-> Burn time, not notifications.
+> Burn time.
 
 A terminal-inspired focus timer for programmers and hackers.
 
-Each focus session is a stick of incense burning down. No trees, no coins, no gamification — just you and time.
+Each focus session is lighting an electronic incense stick. No trees, no coins, no gamification — just you and time.
 
 Built with Jetpack Compose, ASCII animation, and a terminal-first design philosophy.
 
@@ -49,7 +49,7 @@ remaining
 |--------|-------------|
 | **Home** | ASCII incense visualization, countdown timer, ANSI buttons, Config dialog |
 | **Workloads** | CRUD table with Name / Duration / Today / Edit columns |
-| **History** | GitHub-style heatmap (□ ░ ▒ ▓ █), 3-month view, daily detail popup |
+| **History** | GitHub-style heatmap (░ ▒ ▓ █), 3-month view, daily detail popup |
 
 Navigation via terminal-style tab bar:
 
@@ -87,7 +87,7 @@ Idle ──[light]──> Burning ──[100%]──> Completed ──[reset]─
 ### Workloads
 
 ```
-$ workload                                      [ + new ]
+$ workload                        [ + new ]
 
 Name               Duration  Today  Edit
 ====               ========  =====  ====
@@ -225,3 +225,5 @@ MIT
 - GitHub contribution graphs
 - Traditional incense burning
 - Cal Newport's Deep Work
+
+If you have ideas for UI or features, pull requests are welcome.

@@ -45,7 +45,7 @@ fun MainScreen() {
 
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when (currentScreen) {
-                Screen.HOME -> IncenseContent()
+                Screen.HOME -> IncenseContent(onNavigateToWorkload = { currentScreen = Screen.WORKLOAD })
                 Screen.WORKLOAD -> WorkloadScreen(onSelectDone = { currentScreen = Screen.HOME })
                 Screen.HISTORY -> HistoryScreen()
             }

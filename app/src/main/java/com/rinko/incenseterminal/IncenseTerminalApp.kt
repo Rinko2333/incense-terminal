@@ -23,6 +23,11 @@ class IncenseTerminalApp : Application() {
     private val _currentWorkload = MutableStateFlow<WorkloadRow?>(null)
     val currentWorkload: StateFlow<WorkloadRow?> = _currentWorkload.asStateFlow()
 
+    override fun onCreate() {
+        super.onCreate()
+        restoreWorkload()
+    }
+
     fun selectWorkload(workload: WorkloadRow) {
         _currentWorkload.value = workload
         prefs.edit().putLong(PREF_LAST_WL_ID, workload.id).apply()

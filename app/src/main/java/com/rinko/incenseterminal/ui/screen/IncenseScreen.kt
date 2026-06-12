@@ -44,16 +44,20 @@ import com.rinko.incenseterminal.core.engine.IncenseViewModel
 import com.rinko.incenseterminal.core.model.BurnPhase
 import com.rinko.incenseterminal.core.model.IncenseState
 import com.rinko.incenseterminal.core.model.formatSeconds
+import com.rinko.incenseterminal.data.WorkloadRow
 import com.rinko.incenseterminal.ui.theme.IncenseColors
 import com.rinko.incenseterminal.ui.theme.MonospaceFamily
 
 @Composable
 fun IncenseContent(
+    onNavigateToWorkload: () -> Unit = {},
     viewModel: IncenseViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val renderedIncense by viewModel.renderedIncense.collectAsState()
+    val currentWorkload by viewModel.currentWorkload.collectAsState()
     var showConfig by remember { mutableStateOf(false) }
+    var showNoWorkloadDialog by remember { mutableStateOf(false) }
     var dbgClickCount by remember { mutableStateOf(0) }
     var dbgEnabled by remember { mutableStateOf(false) }
 
@@ -87,7 +91,7 @@ fun IncenseContent(
                     if (viewModel.remeasureCount >= 0) {
                         val lineHeightDp = with(density) { 20.sp.toDp() }
                         val maxSticks = if (lineHeightDp > 0.dp)
-                            (heightDp / lineHeightDp).toInt() - 4
+                            (heightDp / lineHeightDp).toInt() - 10
                         else 0
                         if (maxSticks > 0) {
                             viewModel.onMeasured(maxSticks)
@@ -112,7 +116,12 @@ fun IncenseContent(
                     .padding(bottom = 32.dp, top = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                ControlsSection(state, viewModel)
+                ControlsSection(
+                    state = state,
+                    viewModel = viewModel,
+                    hasWorkload = currentWorkload != null,
+                    onNoWorkload = { showNoWorkloadDialog = true }
+                )
             }
         }
 
@@ -153,6 +162,16 @@ fun IncenseContent(
             onSelectTime = { seconds -> viewModel.setDefaultDuration(seconds) },
             onUseDefault = { viewModel.useWorkloadDefault() },
             onSelectLength = { length -> viewModel.setDefaultLength(length) }
+        )
+    }
+
+    if (showNoWorkloadDialog) {
+        NoWorkloadDialog(
+            onDismiss = { showNoWorkloadDialog = false },
+            onGoToWorkload = {
+                showNoWorkloadDialog = false
+                onNavigateToWorkload()
+            }
         )
     }
 }
@@ -247,11 +266,15 @@ private fun TimerSection(state: IncenseState) {
 @Composable
 private fun ControlsSection(
     state: IncenseState,
-    viewModel: IncenseViewModel
+    viewModel: IncenseViewModel,
+    hasWorkload: Boolean = true,
+    onNoWorkload: () -> Unit = {}
 ) {
     when (state.burnPhase) {
         is BurnPhase.Idle -> {
-            AnsiButton("Start") { viewModel.light() }
+            AnsiButton("Start") {
+                if (hasWorkload) viewModel.light() else onNoWorkload()
+            }
         }
         is BurnPhase.Burning -> {
             Row(horizontalArrangement = Arrangement.Center) {
@@ -459,7 +482,7 @@ private fun ConfigTimePage(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "=== Default Time ===",
+            text = "=== Time ===",
             fontFamily = MonospaceFamily,
             fontSize = 14.sp,
             color = IncenseColors.Accent
@@ -664,4 +687,62 @@ private fun ConfigMenuItem(label: String, onClick: () -> Unit) {
             .padding(vertical = 6.dp)
             .fillMaxWidth()
     )
+}
+
+@Composable
+private fun NoWorkloadDialog(
+    onDismiss: () -> Unit,
+    onGoToWorkload: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(0.dp),
+            color = IncenseColors.Background,
+            border = BorderStroke(1.dp, IncenseColors.Accent)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "=== no workload ===",
+                    fontFamily = MonospaceFamily,
+                    fontSize = 14.sp,
+                    color = IncenseColors.Warning
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "No workload selected.",
+                    fontFamily = MonospaceFamily,
+                    fontSize = 13.sp,
+                    color = IncenseColors.DimText
+                )
+                Text(
+                    text = "Create one to start.",
+                    fontFamily = MonospaceFamily,
+                    fontSize = 13.sp,
+                    color = IncenseColors.DimText
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "[ go to workloads ]",
+                    fontFamily = MonospaceFamily,
+                    fontSize = 13.sp,
+                    color = IncenseColors.Accent,
+                    modifier = Modifier
+                        .clickable(onClick = onGoToWorkload)
+                        .padding(vertical = 6.dp)
+                )
+                Text(
+                    text = "[ cancel ]",
+                    fontFamily = MonospaceFamily,
+                    fontSize = 11.sp,
+                    color = IncenseColors.DimText,
+                    modifier = Modifier
+                        .clickable(onClick = onDismiss)
+                        .padding(vertical = 4.dp)
+                )
+            }
+        }
+    }
 }

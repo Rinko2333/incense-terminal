@@ -52,6 +52,8 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
 
     val isUsingOverride: Boolean get() = overrideDurationSeconds != null
 
+    val currentWorkload = app.currentWorkload
+
     val workloadDefaultSeconds: Int?
         get() = app.currentWorkload.value?.defaultDurationMinutes?.times(60)
 
