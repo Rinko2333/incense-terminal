@@ -29,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -39,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rinko.incenseterminal.core.engine.WorkloadViewModel
 import com.rinko.incenseterminal.data.WorkloadRow
 import com.rinko.incenseterminal.ui.theme.IncenseColors
+import com.rinko.incenseterminal.ui.theme.MonospaceFamily
 
 @Composable
 fun WorkloadScreen(
@@ -64,14 +64,14 @@ fun WorkloadScreen(
         ) {
             Text(
                 text = "$ Workload",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 14.sp,
                 color = IncenseColors.Success
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = "[ + new ]",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 14.sp,
                 color = IncenseColors.Accent,
                 modifier = Modifier
@@ -138,7 +138,7 @@ private fun TableHeader() {
         Row(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = "Name",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 12.sp,
                 color = IncenseColors.Success,
                 textAlign = TextAlign.Start,
@@ -148,7 +148,7 @@ private fun TableHeader() {
             )
             Text(
                 text = "Duration",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 12.sp,
                 color = IncenseColors.Success,
                 textAlign = TextAlign.Start,
@@ -158,7 +158,7 @@ private fun TableHeader() {
             )
             Text(
                 text = "Today",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 12.sp,
                 color = IncenseColors.Success,
                 textAlign = TextAlign.Start,
@@ -168,7 +168,7 @@ private fun TableHeader() {
             )
             Text(
                 text = "Edit",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 12.sp,
                 color = IncenseColors.Success,
                 textAlign = TextAlign.Start,
@@ -180,7 +180,7 @@ private fun TableHeader() {
         Row(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = "====",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 10.sp,
                 color = IncenseColors.Success,
                 textAlign = TextAlign.Start,
@@ -190,7 +190,7 @@ private fun TableHeader() {
             )
             Text(
                 text = "========",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 10.sp,
                 color = IncenseColors.Success,
                 textAlign = TextAlign.Start,
@@ -200,7 +200,7 @@ private fun TableHeader() {
             )
             Text(
                 text = "=====",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 10.sp,
                 color = IncenseColors.Success,
                 textAlign = TextAlign.Start,
@@ -210,7 +210,7 @@ private fun TableHeader() {
             )
             Text(
                 text = "====",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 10.sp,
                 color = IncenseColors.Success,
                 textAlign = TextAlign.Start,
@@ -240,7 +240,7 @@ private fun WorkloadTableRow(
         val prefix = if (isSelected) ">" else " "
         Text(
             text = "$prefix ${workload.name.replace("_", " ")}",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 13.sp,
             color = if (isSelected) IncenseColors.PrimaryText else IncenseColors.DimText,
             textAlign = TextAlign.Start,
@@ -251,7 +251,7 @@ private fun WorkloadTableRow(
         )
         Text(
             text = "${workload.defaultDurationMinutes}m",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 13.sp,
             color = IncenseColors.DimText,
             textAlign = TextAlign.Start,
@@ -261,7 +261,7 @@ private fun WorkloadTableRow(
         )
         Text(
             text = "$todayCount",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 13.sp,
             color = IncenseColors.DimText,
             textAlign = TextAlign.Start,
@@ -271,7 +271,7 @@ private fun WorkloadTableRow(
         )
         Text(
             text = "···",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 13.sp,
             color = IncenseColors.Accent,
             textAlign = TextAlign.Start,
@@ -303,7 +303,7 @@ private fun AddWorkloadDialog(
             ) {
                 Text(
                     text = "=== new workload ===",
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = MonospaceFamily,
                     fontSize = 14.sp,
                     color = IncenseColors.Accent
                 )
@@ -325,7 +325,7 @@ private fun AddWorkloadDialog(
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "[ add ]",
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = MonospaceFamily,
                     fontSize = 13.sp,
                     color = IncenseColors.Success,
                     modifier = Modifier
@@ -340,7 +340,7 @@ private fun AddWorkloadDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "[ cancel ]",
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = MonospaceFamily,
                     fontSize = 11.sp,
                     color = IncenseColors.DimText,
                     modifier = Modifier
@@ -374,7 +374,7 @@ private fun EditWorkloadDialog(
             ) {
                 Text(
                     text = "=== edit ===",
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = MonospaceFamily,
                     fontSize = 14.sp,
                     color = IncenseColors.Accent
                 )
@@ -396,7 +396,7 @@ private fun EditWorkloadDialog(
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "[ save ]",
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = MonospaceFamily,
                     fontSize = 13.sp,
                     color = IncenseColors.Success,
                     modifier = Modifier
@@ -411,7 +411,7 @@ private fun EditWorkloadDialog(
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = "[ delete ]",
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = MonospaceFamily,
                     fontSize = 13.sp,
                     color = IncenseColors.Warning,
                     modifier = Modifier
@@ -421,7 +421,7 @@ private fun EditWorkloadDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "[ cancel ]",
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = MonospaceFamily,
                     fontSize = 11.sp,
                     color = IncenseColors.DimText,
                     modifier = Modifier
@@ -444,7 +444,7 @@ private fun DialogTextField(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = label,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 13.sp,
             color = IncenseColors.DimText
         )
@@ -455,7 +455,7 @@ private fun DialogTextField(
             modifier = Modifier.width(120.dp),
             textStyle = TextStyle(
                 color = textColor,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 13.sp
             ),
             singleLine = true,

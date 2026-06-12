@@ -35,7 +35,6 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +45,7 @@ import com.rinko.incenseterminal.core.model.BurnPhase
 import com.rinko.incenseterminal.core.model.IncenseState
 import com.rinko.incenseterminal.core.model.formatSeconds
 import com.rinko.incenseterminal.ui.theme.IncenseColors
+import com.rinko.incenseterminal.ui.theme.MonospaceFamily
 
 @Composable
 fun IncenseContent(
@@ -162,25 +162,25 @@ private fun TerminalHeader(state: IncenseState, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Text(
             text = "$ Incense Start",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 14.sp,
             color = IncenseColors.Success
         )
         Text(
             text = "Session : #${state.sessionNumber.toString().padStart(3, '0')}",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 13.sp,
             color = IncenseColors.PrimaryText
         )
         Text(
             text = "Today   : ${state.todayFocusMinutes}m",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 12.sp,
             color = IncenseColors.DimText
         )
         Text(
             text = "Streak  : ${state.streakDays}",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 12.sp,
             color = IncenseColors.DimText
         )
@@ -191,7 +191,7 @@ private fun TerminalHeader(state: IncenseState, modifier: Modifier = Modifier) {
 private fun ConfigButton(onClick: () -> Unit) {
     Text(
         text = "< Config >",
-        fontFamily = FontFamily.Monospace,
+        fontFamily = MonospaceFamily,
         fontSize = 14.sp,
         color = IncenseColors.Accent,
         modifier = Modifier
@@ -204,7 +204,7 @@ private fun ConfigButton(onClick: () -> Unit) {
 private fun IncenseDisplay(renderedIncense: AnnotatedString) {
     Text(
         text = renderedIncense,
-        fontFamily = FontFamily.Monospace,
+        fontFamily = MonospaceFamily,
         fontSize = 16.sp,
         lineHeight = 20.sp,
         textAlign = TextAlign.Center,
@@ -230,14 +230,14 @@ private fun TimerSection(state: IncenseState) {
         if (statusLabel.isNotEmpty()) {
             Text(
                 text = statusLabel,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 10.sp,
                 color = IncenseColors.DimText
             )
         }
         Text(
             text = remainingText,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 24.sp,
             color = IncenseColors.PrimaryText
         )
@@ -277,7 +277,7 @@ private fun ControlsSection(
 private fun AnsiButton(label: String, onClick: () -> Unit) {
     Text(
         text = "░░░ $label ░░░",
-        fontFamily = FontFamily.Monospace,
+        fontFamily = MonospaceFamily,
         fontSize = 16.sp,
         color = IncenseColors.Accent,
         modifier = Modifier
@@ -314,7 +314,7 @@ private fun DebugOverlay(
             ) {
                 Text(
                     text = "[ debug menu ]",
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = MonospaceFamily,
                     fontSize = 12.sp,
                     color = IncenseColors.DimText
                 )
@@ -330,7 +330,7 @@ private fun DebugOverlay(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "  (start burning first)",
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = MonospaceFamily,
                         fontSize = 11.sp,
                         color = IncenseColors.Warning
                     )
@@ -349,7 +349,7 @@ private fun DebugOverlay(
 private fun DebugMenuItem(label: String, onClick: () -> Unit) {
     Text(
         text = "  $label",
-        fontFamily = FontFamily.Monospace,
+        fontFamily = MonospaceFamily,
         fontSize = 12.sp,
         color = IncenseColors.PrimaryText,
         modifier = Modifier
@@ -418,7 +418,7 @@ private fun ConfigMainPage(
     ) {
         Text(
             text = "=== Config ===",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 14.sp,
             color = IncenseColors.Accent
         )
@@ -430,7 +430,7 @@ private fun ConfigMainPage(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "[ cancel ]",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 11.sp,
             color = IncenseColors.DimText,
             modifier = Modifier
@@ -460,7 +460,7 @@ private fun ConfigTimePage(
     ) {
         Text(
             text = "=== Default Time ===",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 14.sp,
             color = IncenseColors.Accent
         )
@@ -470,7 +470,7 @@ private fun ConfigTimePage(
             val isDefaultSelected = selected == defaultSentinel
             Text(
                 text = if (isDefaultSelected) " > #DEFAULT (${workloadDefaultSeconds / 60}m) < " else "   #DEFAULT (${workloadDefaultSeconds / 60}m)   ",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 13.sp,
                 color = if (isDefaultSelected) IncenseColors.Ember else IncenseColors.PrimaryText,
                 modifier = Modifier
@@ -492,7 +492,7 @@ private fun ConfigTimePage(
                 val isSelected = sec == selected
                 Text(
                     text = if (isSelected) " > $label < " else "   $label   ",
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = MonospaceFamily,
                     fontSize = 13.sp,
                     color = if (isSelected) IncenseColors.Ember else IncenseColors.PrimaryText,
                     modifier = Modifier
@@ -511,7 +511,7 @@ private fun ConfigTimePage(
         if (!isCustom) {
             Text(
                 text = "[ Custom ]",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 13.sp,
                 color = IncenseColors.PrimaryText,
                 modifier = Modifier
@@ -527,7 +527,7 @@ private fun ConfigTimePage(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "[ save ]",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 12.sp,
                 color = IncenseColors.Success,
                 modifier = Modifier
@@ -545,7 +545,7 @@ private fun ConfigTimePage(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = if (isCustom) "[ cancel ]" else "[ back ]",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 11.sp,
             color = IncenseColors.DimText,
             modifier = Modifier
@@ -571,7 +571,7 @@ private fun CustomInputRow(value: String, onValueChange: (String) -> Unit) {
     ) {
         Text(
             text = ">[",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 13.sp,
             color = textColor
         )
@@ -585,7 +585,7 @@ private fun CustomInputRow(value: String, onValueChange: (String) -> Unit) {
             modifier = Modifier.width(60.dp),
             textStyle = TextStyle(
                 color = textColor,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center
             ),
@@ -594,7 +594,7 @@ private fun CustomInputRow(value: String, onValueChange: (String) -> Unit) {
         )
         Text(
             text = if (value.isNotEmpty()) " minutes]<" else "     minutes]<",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 13.sp,
             color = textColor
         )
@@ -616,7 +616,7 @@ private fun ConfigLengthPage(
     ) {
         Text(
             text = "=== Length ===",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 14.sp,
             color = IncenseColors.Accent
         )
@@ -626,7 +626,7 @@ private fun ConfigLengthPage(
             val isSelected = len == selected
             Text(
                 text = if (isSelected) " > $len < " else "   $len   ",
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 13.sp,
                 color = if (isSelected) IncenseColors.Ember else IncenseColors.PrimaryText,
                 modifier = Modifier
@@ -642,7 +642,7 @@ private fun ConfigLengthPage(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "[ back ]",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 11.sp,
             color = IncenseColors.DimText,
             modifier = Modifier
@@ -656,7 +656,7 @@ private fun ConfigLengthPage(
 private fun ConfigMenuItem(label: String, onClick: () -> Unit) {
     Text(
         text = "  $label",
-        fontFamily = FontFamily.Monospace,
+        fontFamily = MonospaceFamily,
         fontSize = 13.sp,
         color = IncenseColors.PrimaryText,
         modifier = Modifier

@@ -176,7 +176,7 @@ Repeat.
 ## Building
 
 ```bash
-git clone https://github.com/yourname/incense-terminal.git
+git clone git@github.com:Rinko2333/incense-terminal.git
 cd incense-terminal
 ```
 

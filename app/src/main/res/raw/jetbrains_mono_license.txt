@@ -1,0 +1,5 @@
+JetBrains Mono
+Copyright © 2020 JetBrains s.r.o.
+Released under the SIL Open Font License v1.1.
+https://www.jetbrains.com/lp/mono/
+https://github.com/JetBrains/JetBrainsMono

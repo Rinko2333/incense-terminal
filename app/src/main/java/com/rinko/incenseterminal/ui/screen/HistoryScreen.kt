@@ -26,7 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rinko.incenseterminal.core.engine.HistoryViewModel
 import com.rinko.incenseterminal.data.HeatmapDay
 import com.rinko.incenseterminal.ui.theme.IncenseColors
+import com.rinko.incenseterminal.ui.theme.MonospaceFamily
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -69,7 +69,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = viewModel()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "$ Burn Log",
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = MonospaceFamily,
                     fontSize = 14.sp,
                     color = IncenseColors.Success
                 )
@@ -78,7 +78,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = viewModel()) {
                 Spacer(modifier = Modifier.width(2.dp))
                 Text(
                     text = viewModel.monthLabel(viewMonth),
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = MonospaceFamily,
                     fontSize = 14.sp,
                     color = IncenseColors.PrimaryText
                 )
@@ -127,7 +127,7 @@ private fun DayOfWeekHeader() {
         DAY_LABELS.forEach { label ->
             Text(
                 text = label,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 10.sp,
                 color = IncenseColors.DimText,
                 textAlign = TextAlign.Center,
@@ -141,7 +141,7 @@ private fun DayOfWeekHeader() {
 private fun ArrowButton(label: String, onClick: () -> Unit) {
     Text(
         text = label,
-        fontFamily = FontFamily.Monospace,
+        fontFamily = MonospaceFamily,
         fontSize = 13.sp,
         color = IncenseColors.Accent,
         modifier = Modifier
@@ -158,7 +158,7 @@ private fun MonthBlock(
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Text(
             text = block.label,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = MonospaceFamily,
             fontSize = 12.sp,
             color = IncenseColors.DimText,
             modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)
@@ -201,7 +201,7 @@ private fun HeatmapCellView(
             val color = heatColor(cell.totalMinutes, cell.isFuture)
             Text(
                 text = ch,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonospaceFamily,
                 fontSize = 16.sp,
                 color = color,
                 textAlign = TextAlign.Center
@@ -213,13 +213,13 @@ private fun HeatmapCellView(
 @Composable
 private fun HeatmapLegend() {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "Less", fontFamily = FontFamily.Monospace, fontSize = 14.sp, color = IncenseColors.DimText)
+        Text(text = "Less", fontFamily = MonospaceFamily, fontSize = 14.sp, color = IncenseColors.DimText)
         Spacer(modifier = Modifier.width(2.dp))
         listOf("□", "░", "▒", "▓", "█").forEach { ch ->
-            Text(text = ch, fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = IncenseColors.PrimaryText)
+            Text(text = ch, fontFamily = MonospaceFamily, fontSize = 12.sp, color = IncenseColors.PrimaryText)
             Spacer(modifier = Modifier.width(1.dp))
         }
-        Text(text = "More", fontFamily = FontFamily.Monospace, fontSize = 14.sp, color = IncenseColors.DimText)
+        Text(text = "More", fontFamily = MonospaceFamily, fontSize = 14.sp, color = IncenseColors.DimText)
     }
 }
 
@@ -253,7 +253,7 @@ private fun DayDetailCard(
 
                 Text(
                     text = "== $dateStr ==",
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = MonospaceFamily,
                     fontSize = 14.sp,
                     color = IncenseColors.Accent
                 )
@@ -262,7 +262,7 @@ private fun DayDetailCard(
                 if (dayData.summaries.isEmpty()) {
                     Text(
                         text = "no sessions",
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = MonospaceFamily,
                         fontSize = 12.sp,
                         color = IncenseColors.DimText
                     )
@@ -270,7 +270,7 @@ private fun DayDetailCard(
                     val totalMin = dayData.summaries.sumOf { it.totalMinutes }
                     Text(
                         text = "${dayData.sessions.size} sessions, ${totalMin}m total",
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = MonospaceFamily,
                         fontSize = 11.sp,
                         color = IncenseColors.DimText
                     )
@@ -279,7 +279,7 @@ private fun DayDetailCard(
                         val name = summary.workloadName.replace("_", " ")
                         Text(
                             text = "$name  ${summary.totalMinutes}m",
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = MonospaceFamily,
                             fontSize = 12.sp,
                             color = IncenseColors.PrimaryText
                         )
