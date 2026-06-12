@@ -1,5 +1,10 @@
 # Incense Terminal
 
+<p align="right">
+  <a href="./README.md">🇺🇸 English</a> |
+  <a href="./README_CN.md">🇨🇳 简体中文</a>
+</p>
+
 > Burn time, not notifications.
 
 A terminal-inspired focus timer for programmers and hackers.
