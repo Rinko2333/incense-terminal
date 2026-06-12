@@ -118,8 +118,8 @@ fun IncenseContent(
 
         Box(
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 4.dp, end = 4.dp)
+                .align(Alignment.BottomStart)
+                .padding(start = 4.dp, bottom = 4.dp)
                 .size(48.dp)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
