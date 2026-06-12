@@ -11,6 +11,11 @@
 .idea/deploymentTargetSelector.xml
 .idea/deviceManager.xml
 .idea/copilot.data.migration.*.xml
+.idea/markdown.xml
+.idea/gradle.xml
+.idea/runConfigurations.xml
+.idea/compiler.xml
+.idea/vcs.xml
 .DS_Store
 /build
 /captures

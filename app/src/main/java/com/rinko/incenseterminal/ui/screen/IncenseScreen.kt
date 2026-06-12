@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -44,6 +45,7 @@ import com.rinko.incenseterminal.core.engine.IncenseViewModel
 import com.rinko.incenseterminal.core.model.BurnPhase
 import com.rinko.incenseterminal.core.model.IncenseState
 import com.rinko.incenseterminal.core.model.formatSeconds
+import com.rinko.incenseterminal.core.notification.NotificationHelper
 import com.rinko.incenseterminal.data.WorkloadRow
 import com.rinko.incenseterminal.ui.theme.IncenseColors
 import com.rinko.incenseterminal.ui.theme.MonospaceFamily
@@ -56,10 +58,21 @@ fun IncenseContent(
     val state by viewModel.state.collectAsState()
     val renderedIncense by viewModel.renderedIncense.collectAsState()
     val currentWorkload by viewModel.currentWorkload.collectAsState()
+    val context = LocalContext.current
     var showConfig by remember { mutableStateOf(false) }
     var showNoWorkloadDialog by remember { mutableStateOf(false) }
     var dbgClickCount by remember { mutableStateOf(0) }
     var dbgEnabled by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.completionEvent.collect { info ->
+            NotificationHelper.showComplete(
+                context = context,
+                workloadName = info.workloadName,
+                durationMinutes = info.durationMinutes
+            )
+        }
+    }
 
     Box(
         modifier = Modifier

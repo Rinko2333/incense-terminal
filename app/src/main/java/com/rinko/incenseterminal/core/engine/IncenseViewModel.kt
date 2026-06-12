@@ -13,10 +13,12 @@ import com.rinko.incenseterminal.core.model.SmokePhase
 import com.rinko.incenseterminal.core.renderer.IncenseRenderer
 import com.rinko.incenseterminal.data.FocusSessionRow
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -31,16 +33,18 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
     private val ceremonyPlayer = CeremonyPlayer(viewModelScope)
 
     private var burnJob: Job? = null
-    private var elapsedMs: Long = 0L
-    private var config: IncenseConfig = IncenseConfig()
-    private var sessionStartMs: Long = 0L
-
     private val tickIntervalMs = 100L
 
     private val _renderedIncense = MutableStateFlow(AnnotatedString(""))
     val renderedIncense: StateFlow<AnnotatedString> = _renderedIncense.asStateFlow()
 
     private var renderJob: Job? = null
+
+    private val _completionEvent = Channel<CompletionInfo>(Channel.BUFFERED)
+    val completionEvent = _completionEvent.receiveAsFlow()
+
+    private var config: IncenseConfig = IncenseConfig()
+    private var sessionStartTimestampMs: Long = 0L
 
     var defaultDurationSeconds: Int = 25 * 60
         private set
@@ -131,7 +135,12 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
                     overrideDurationSeconds = null
                     val base = wl.defaultDurationMinutes * 60
                     defaultDurationSeconds = base
-                    _state.update { it.copy(workloadName = wl.name) }
+                    val current = _state.value
+                    if (current.isIdle) {
+                        _state.update { it.copy(workloadName = wl.name) }
+                    } else {
+                        _state.update { it.copy(workloadName = wl.name) }
+                    }
                 }
             }
         }
@@ -148,11 +157,56 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
         }
         _state.update { it.copy(totalSticks = defaultLength) }
         refreshAggregateState()
+        restoreSessionIfAny()
+    }
+
+    private fun restoreSessionIfAny() {
+        val anchor = app.getSessionAnchor() ?: return
+        val elapsedSec = ((System.currentTimeMillis() - anchor.startTimestampMs) / 1000L).toInt()
+        val totalSec = anchor.totalSeconds
+        val workloadName = anchor.workloadName
+
+        if (elapsedSec >= totalSec) {
+            sessionStartTimestampMs = anchor.startTimestampMs
+            config = IncenseConfig(durationSeconds = totalSec, length = defaultLength)
+            _state.update { s ->
+                s.copy(
+                    totalSticks = config.totalSticks,
+                    durationSeconds = totalSec,
+                    burnPhase = BurnPhase.Completed,
+                    workloadName = workloadName.ifEmpty { s.workloadName }
+                )
+            }
+            recordSessionAndNotify(completed = true, workloadName = workloadName, totalSec = totalSec)
+            app.clearSessionAnchor()
+            ceremonyPlayer.play()
+            return
+        }
+
+        if (anchor.running) {
+            sessionStartTimestampMs = anchor.startTimestampMs
+            config = IncenseConfig(durationSeconds = totalSec, length = defaultLength)
+            val progress = (elapsedSec.toFloat() / totalSec).coerceIn(0f, 1f)
+            _state.update { s ->
+                s.copy(
+                    totalSticks = config.totalSticks,
+                    durationSeconds = totalSec,
+                    workloadName = workloadName.ifEmpty { s.workloadName },
+                    burnPhase = BurnPhase.Burning(
+                        progress = progress,
+                        emberPhase = EmberPhase.cycleFrom(EmberPhase.DOT, elapsedSec * 1000L),
+                        smokePhase = smokeAnimator.currentPhase.value
+                    )
+                )
+            }
+            smokeAnimator.start()
+            startBurnTimer()
+        }
     }
 
     fun light(durationSeconds: Int = effectiveDurationSeconds()) {
         config = IncenseConfig(durationSeconds = durationSeconds, length = defaultLength)
-        sessionStartMs = System.currentTimeMillis()
+        sessionStartTimestampMs = System.currentTimeMillis()
         _state.update { s ->
             s.copy(
                 totalSticks = config.totalSticks,
@@ -164,7 +218,11 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
                 )
             )
         }
-        elapsedMs = 0L
+        app.saveSessionAnchor(
+            startTimestampMs = sessionStartTimestampMs,
+            totalSeconds = durationSeconds,
+            workloadName = _state.value.workloadName
+        )
         smokeAnimator.start()
         startBurnTimer()
     }
@@ -175,11 +233,18 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
         _state.update { it.copy(burnPhase = BurnPhase.Paused(progress = progress)) }
         burnJob?.cancel()
         smokeAnimator.pause()
+        app.setSessionPaused(
+            startTimestampMs = sessionStartTimestampMs,
+            totalSeconds = config.durationSeconds,
+            workloadName = _state.value.workloadName
+        )
     }
 
     fun resume() {
         val current = _state.value
         val paused = current.burnPhase as? BurnPhase.Paused ?: return
+        sessionStartTimestampMs = System.currentTimeMillis() -
+            (paused.progress * config.durationSeconds * 1000L).toLong()
         _state.update {
             it.copy(burnPhase = BurnPhase.Burning(
                 progress = paused.progress,
@@ -188,6 +253,11 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
             ))
         }
         smokeAnimator.resume()
+        app.saveSessionAnchor(
+            startTimestampMs = sessionStartTimestampMs,
+            totalSeconds = config.durationSeconds,
+            workloadName = _state.value.workloadName
+        )
         startBurnTimer()
     }
 
@@ -195,8 +265,8 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
         burnJob?.cancel()
         smokeAnimator.stop()
         ceremonyPlayer.stop()
-        elapsedMs = 0L
-        sessionStartMs = 0L
+        sessionStartTimestampMs = 0L
+        app.clearSessionAnchor()
         val current = _state.value
         _state.value = IncenseState(
             totalSticks = defaultLength,
@@ -213,19 +283,23 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
         burnJob = viewModelScope.launch {
             while (true) {
                 delay(tickIntervalMs)
-                elapsedMs += tickIntervalMs
+                val now = System.currentTimeMillis()
+                val elapsedMs = (now - sessionStartTimestampMs).coerceAtLeast(0L)
                 val totalDurationMs = config.durationSeconds * 1000L
-                val progress = (elapsedMs.toFloat() / totalDurationMs).coerceAtMost(1f)
+                val progress = (elapsedMs.toFloat() / totalDurationMs).coerceIn(0f, 1f)
 
                 val emberPhase = EmberPhase.cycleFrom(EmberPhase.DOT, elapsedMs)
 
                 if (progress >= 1f) {
+                    val workloadName = _state.value.workloadName
+                    val totalSec = config.durationSeconds
                     _state.update {
                         it.copy(burnPhase = BurnPhase.Completed)
                     }
                     smokeAnimator.stop()
                     ceremonyPlayer.play()
-                    recordSession(completed = true)
+                    app.clearSessionAnchor()
+                    recordSessionAndNotify(completed = true, workloadName = workloadName, totalSec = totalSec)
                     break
                 } else {
                     _state.update { s ->
@@ -250,20 +324,24 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun recordSession(completed: Boolean) {
-        val currentState = _state.value
-        val workloadName = currentState.workloadName.ifEmpty { "focus" }
+    private fun recordSessionAndNotify(completed: Boolean, workloadName: String, totalSec: Int) {
+        val name = workloadName.ifEmpty { "focus" }
         val now = System.currentTimeMillis()
         val session = FocusSessionRow(
-            workloadName = workloadName,
-            durationMinutes = currentState.durationMinutes,
-            startTimestamp = sessionStartMs,
+            workloadName = name,
+            durationMinutes = totalSec / 60,
+            startTimestamp = sessionStartTimestampMs,
             endTimestamp = now,
             completed = completed
         )
         viewModelScope.launch {
             app.sessionRepo.record(session)
             refreshAggregateState()
+        }
+        if (completed) {
+            viewModelScope.launch {
+                _completionEvent.send(CompletionInfo(name, totalSec / 60))
+            }
         }
     }
 
@@ -300,20 +378,24 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
         val current = _state.value
         val burning = current.burnPhase as? BurnPhase.Burning ?: return
         if (targetProgress >= 1f) {
+            val workloadName = _state.value.workloadName
+            val totalSec = config.durationSeconds
             _state.update { it.copy(burnPhase = BurnPhase.Completed) }
             burnJob?.cancel()
             smokeAnimator.stop()
             ceremonyPlayer.play()
-            recordSession(completed = true)
+            app.clearSessionAnchor()
+            recordSessionAndNotify(completed = true, workloadName = workloadName, totalSec = totalSec)
             return
         }
         val totalDurationMs = config.durationSeconds * 1000L
-        elapsedMs = (targetProgress * totalDurationMs).toLong()
+        val targetElapsedMs = (targetProgress * totalDurationMs).toLong()
+        sessionStartTimestampMs = System.currentTimeMillis() - targetElapsedMs
         _state.update {
             it.copy(
                 burnPhase = burning.copy(
                     progress = targetProgress,
-                    emberPhase = EmberPhase.cycleFrom(EmberPhase.DOT, elapsedMs),
+                    emberPhase = EmberPhase.cycleFrom(EmberPhase.DOT, targetElapsedMs),
                     smokePhase = smokeAnimator.currentPhase.value
                 )
             )
@@ -334,3 +416,8 @@ class IncenseViewModel(application: Application) : AndroidViewModel(application)
         renderJob?.cancel()
     }
 }
+
+data class CompletionInfo(
+    val workloadName: String,
+    val durationMinutes: Int
+)
